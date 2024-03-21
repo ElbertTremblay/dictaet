@@ -1,0 +1,63 @@
+###
+# Name: Northwind
+# Type: V4 - Read Only
+# Address: https://services.odata.org/V4/Northwind/Northwind.svc
+###
+
+# --- VsCode Config ---
+
+@rootUrl = https://services.odata.org/V4/Northwind/Northwind.svc
+@contentType = application/json
+
+
+# --- Basics ---
+### Metadata
+GET {{rootUrl}}/$metadata
+
+# --- Data Types ---
+###
+# @name Binary Example
+GET {{rootUrl}}/Categories(8)/Picture/$value
+#Accept: application/octet-stream
+
+
+# --- Order By ---
+### Order by boolean
+GET {{rootUrl}}/Products
+?$orderby=Discontinued desc
+
+### Order by 1:1 relationship
+GET {{rootUrl}}/Orders
+?$orderby=Employee/LastName asc
+
+### FAILS: Order by 1:n relationship
+GET {{rootUrl}}/Categories
+?$select=CategoryName&$expand=Products&$orderby=Products/ProductName desc
+
+### Order by manipulated number
+GET {{rootUrl}}/Orders
+?$orderby=Employee/LastName asc
+
+### Order by with multiple expressions
+GET {{rootUrl}}/Products
+?$orderby=Discontinued desc,ProductName asc
+
+
+# --- Filter ---
+### FAILS: filter with "in" statement
+GET {{rootUrl}}/Products
+?$filter=ProductName in ('Chai', 'Chang')
+
+### Filter by prop of 1:1 relationship
+GET {{rootUrl}}/Orders
+?$count=true&$filter=Employee/LastName eq 'Buchanan'
+
+### Filter by any on 1:n relationship
+GET {{rootUrl}}/Categories
+?$select=CategoryName,Description&$filter=Products/any(p:p/ProductName eq 'Aniseed Syrup')
+
+### IEEE754Compatible => should type Edm.Int64 and Edm.Decimal as string
+# @name count is Int64
+GET {{rootUrl}}/Products?$count=true
+Accept: {{contentType}};IEEE754Compatible=true
+
